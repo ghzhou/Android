@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Email Notification</string>
+    <string name="title_activity_main">Settings</string>
+    <string name="save_button_label">Save</string>
+    <string name="email_recipient">Email Recipient</string>
+    <string name="smtp_server">Smtp Server</string>
+    <string name="port_number">Port Number</string>
+    <string name="email_address">Email Address</string>
+    <string name="password">Password</string>
+</resources>
