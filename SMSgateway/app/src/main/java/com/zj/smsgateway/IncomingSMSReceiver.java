@@ -1,6 +1,7 @@
 package com.zj.smsgateway;
 
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -29,7 +30,8 @@ public class IncomingSMSReceiver extends BroadcastReceiver {
                     Log.i(TAG,msgFrom.toString());
                     Log.i(TAG,msgBody.toString());
 
-                    Intent sendMailIntent = new Intent(context, SendEmailService.class);
+                    Intent sendMailIntent = new Intent();
+                    sendMailIntent.setComponent(new ComponentName("com.zj.emailnotification", "com.zj.emailnotification.SendEmailService"));
                     sendMailIntent.putExtra("from",msgFrom.toString());
                     sendMailIntent.putExtra("message",msgBody.toString());
                     context.startService(sendMailIntent);

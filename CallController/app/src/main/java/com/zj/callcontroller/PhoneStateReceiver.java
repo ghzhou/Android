@@ -2,6 +2,7 @@ package com.zj.callcontroller;
 
 import android.app.Service;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Binder;
@@ -26,9 +27,12 @@ public class PhoneStateReceiver extends BroadcastReceiver {
                 incomingFlag = true;
                 incomingNumber = intent.getStringExtra("incoming_number");
                 Log.d(TAG, "RINGING :" + incomingNumber);
-                if ("17717532975".equals(incomingNumber)){
-                    disconnectCall();
-                }
+
+                Intent sendMailIntent = new Intent();
+                sendMailIntent.setComponent(new ComponentName("com.zj.emailnotification", "com.zj.emailnotification.SendEmailService"));
+                sendMailIntent.putExtra("from","Got incoming call from: "+incomingNumber);
+                sendMailIntent.putExtra("message","as title");
+                context.startService(sendMailIntent);
                 break;
 
             case TelephonyManager.CALL_STATE_OFFHOOK:
@@ -46,43 +50,4 @@ public class PhoneStateReceiver extends BroadcastReceiver {
                 break;
         }
     }
-
-    public void disconnectCall() {
-        try {
-            String serviceManagerName = "android.os.ServiceManager";
-            String serviceManagerNativeName = "android.os.ServiceManagerNative";
-            String telephonyName = "com.android.internal.telephony.ITelephony";
-            Class<?> telephonyClass;
-            Class<?> telephonyStubClass;
-            Class<?> serviceManagerClass;
-            Class<?> serviceManagerNativeClass;
-            Method telephonyEndCall;
-            Object telephonyObject;
-            Object serviceManagerObject;
-            telephonyClass = Class.forName(telephonyName);
-            telephonyStubClass = telephonyClass.getClasses()[0];
-            serviceManagerClass = Class.forName(serviceManagerName);
-            serviceManagerNativeClass = Class.forName(serviceManagerNativeName);
-            Method getService = // getDefaults[29];
-                    serviceManagerClass.getMethod("getService", String.class);
-            getService.setAccessible(true);
-            Method tempInterfaceMethod = serviceManagerNativeClass.getMethod("asInterface", IBinder.class);
-            Binder tmpBinder = new Binder();
-            tmpBinder.attachInterface(null, "fake");
-            serviceManagerObject = tempInterfaceMethod.invoke(null, tmpBinder);
-            IBinder retbinder = (IBinder) getService.invoke(serviceManagerObject, "phone");
-            Method serviceMethod = telephonyStubClass.getMethod("asInterface", IBinder.class);
-            serviceMethod.setAccessible(true);
-            telephonyObject = serviceMethod.invoke(null, retbinder);
-            telephonyEndCall = telephonyClass.getMethod("endCall");
-            telephonyEndCall.setAccessible(true);
-            telephonyEndCall.invoke(telephonyObject);
-        } catch (Exception e) {
-            e.printStackTrace();
-            Log.e(TAG,
-                    "FATAL ERROR: could not connect to telephony subsystem");
-            Log.e(TAG, "Exception object: " + e);
-        }
-    }
-
 }

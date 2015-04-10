@@ -1,6 +1,9 @@
-package com.zj.smsgateway;
+package com.zj.emailnotification;
 
-import android.content.SharedPreferences;
+import android.content.ContentResolver;
+import android.content.ContentValues;
+import android.database.Cursor;
+import android.net.Uri;
 import android.util.Log;
 
 /**
@@ -8,7 +11,8 @@ import android.util.Log;
  */
 public class Settings {
 
-    private String TAG = Settings.class.getName();
+    private final String TAG = Settings.class.getName();
+    private final Uri uri = Uri.parse("content://com.zj.emailnotification.provider/email_notification_setting/1");
     private static Settings instance=null;
 
     public static String EMAIL_ADDRESS="email_address";
@@ -17,34 +21,38 @@ public class Settings {
     public static String PASSWORD="password";
     public static String EMAIL_RECIPIENT = "email_recipient";
 
-    private SharedPreferences settings;
+    private ContentResolver contentResolver;
     private String emailAddress;
     private String smtpServer;
     private String portNumber;
     private String password;
     private String emailRecipient;
-    private boolean dirty;
-    private SharedPreferences.Editor editor;
+    private ContentValues newSettings;
 
-    private Settings(SharedPreferences settings){
+    private boolean dirty;
+
+    private Settings(ContentResolver contentResolver){
         dirty=false;
-        this.settings = settings;
+        this.contentResolver = contentResolver;
         loadSettings();
     }
 
-    public static Settings getInstance(SharedPreferences settings){
+    public static Settings getInstance(ContentResolver cr){
         if (null==instance){
-            instance = new Settings(settings);
+            instance = new Settings(cr);
         }
         return instance;
     }
 
-    private void loadSettings(){
-        emailAddress = settings.getString(EMAIL_ADDRESS, "");
-        smtpServer = settings.getString(SMTP_SERVER, "");
-        portNumber = settings.getString(PORT_NUMBER, "");
-        password = settings.getString(PASSWORD, "");
-        emailRecipient = settings.getString(EMAIL_RECIPIENT,"");
+    public void loadSettings(){
+        Cursor cur = contentResolver.query(uri, null, null, null, null);
+        cur.moveToNext();
+        smtpServer = cur.getString(1);
+        portNumber = cur.getString(2);
+        emailAddress = cur.getString(3);
+        password = cur.getString(4);
+        emailRecipient = cur.getString(5);
+        cur.close();
     }
 
     public boolean isValid(){ // to be refactored , need to be more precise.
@@ -54,7 +62,7 @@ public class Settings {
     // return true means the settings has been changed
     public boolean saveSettings(){
         if(dirty){
-            editor.apply();
+            contentResolver.update(uri,newSettings,null,null);
             dirty=false;
             return true;
         };
@@ -62,9 +70,9 @@ public class Settings {
         return false;
     }
 
-    private void initializeEditor(){
+    private void initializeNewSetting(){
         if(dirty) return;
-        editor = settings.edit();
+        newSettings = new ContentValues();
         dirty=true;
     }
 
@@ -77,8 +85,8 @@ public class Settings {
             return;
         }
         this.emailAddress = emailAddress;
-        initializeEditor();
-        editor.putString(EMAIL_ADDRESS,emailAddress);
+        initializeNewSetting();
+        newSettings.put(EMAIL_ADDRESS, emailAddress);
     }
 
     public String getSmtpServer() {
@@ -90,8 +98,8 @@ public class Settings {
             return;
         }
         this.smtpServer = smtpServer;
-        initializeEditor();
-        editor.putString(SMTP_SERVER,smtpServer);
+        initializeNewSetting();
+        newSettings.put(SMTP_SERVER, smtpServer);
     }
 
     public String getPortNumber() {
@@ -103,8 +111,8 @@ public class Settings {
             return;
         }
         this.portNumber = portNumber;
-        initializeEditor();
-        editor.putString(PORT_NUMBER,portNumber);
+        initializeNewSetting();
+        newSettings.put(PORT_NUMBER, portNumber);
     }
 
     public String getPassword() {
@@ -116,8 +124,8 @@ public class Settings {
             return;
         }
         this.password = password;
-        initializeEditor();
-        editor.putString(PASSWORD,password);
+        initializeNewSetting();
+        newSettings.put(PASSWORD, password);
     }
 
     public String getEmailRecipient() {
@@ -129,7 +137,7 @@ public class Settings {
             return;
         }
         this.emailRecipient = emailRecipient;
-        initializeEditor();
-        editor.putString(EMAIL_RECIPIENT,emailRecipient);
+        initializeNewSetting();
+        newSettings.put(EMAIL_RECIPIENT, emailRecipient);
     }
 }

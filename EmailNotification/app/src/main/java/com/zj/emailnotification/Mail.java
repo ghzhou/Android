@@ -1,4 +1,4 @@
-package com.zj.smsgateway;
+package com.zj.emailnotification;
 
 import android.util.Log;
 
