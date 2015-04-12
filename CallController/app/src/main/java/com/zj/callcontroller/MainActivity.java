@@ -16,7 +16,7 @@ import java.lang.reflect.Method;
 
 public class MainActivity extends ActionBarActivity {
 
-    private static String TAG = "zhoujie";
+    private static String TAG = MainActivity.class.getName();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
