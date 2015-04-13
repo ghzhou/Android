@@ -6,7 +6,11 @@ import android.os.IBinder;
 import android.util.Log;
 
 public class SendEmailService extends Service {
+    public static final String EXTRA_SUBJECT = "extra_subject";
+    public static final String EXTRA_BODY = "extra_body";
+
     private static final String TAG = SendEmailService.class.getName();
+
     private Mail mail;
     private Settings settings;
 
@@ -48,14 +52,14 @@ public class SendEmailService extends Service {
             stopSelf(startId);
             return START_NOT_STICKY;
         }
-        String from = intent.getExtras().getString("from");
-        String message = intent.getExtras().getString("message");
-        if (from.length() == 0 && message.length() == 0) {
+        String subject = intent.getExtras().getString(EXTRA_SUBJECT);
+        String body = intent.getExtras().getString(EXTRA_BODY);
+        if (subject.length() == 0 && body.length() == 0) {
             Log.e(TAG,"Empty email message.");
             stopSelf(startId);
             return START_NOT_STICKY;
         }
-        new Thread(new SendEmailThread(from, message)).start();
+        new Thread(new SendEmailThread(subject, body)).start();
         return START_NOT_STICKY;
     }
 

@@ -10,6 +10,8 @@ import android.util.Log;
 
 public class IncomingSMSReceiver extends BroadcastReceiver {
 
+    private static final String EXTRA_SUBJECT = "extra_subject";
+    private static final String EXTRA_BODY = "extra_body";
     private String TAG = IncomingSMSReceiver.class.getName();
 
     @Override
@@ -32,8 +34,8 @@ public class IncomingSMSReceiver extends BroadcastReceiver {
 
                     Intent sendMailIntent = new Intent();
                     sendMailIntent.setComponent(new ComponentName("com.zj.emailnotification", "com.zj.emailnotification.SendEmailService"));
-                    sendMailIntent.putExtra("from",msgFrom.toString());
-                    sendMailIntent.putExtra("message",msgBody.toString());
+                    sendMailIntent.putExtra(EXTRA_SUBJECT, msgFrom.toString());
+                    sendMailIntent.putExtra(EXTRA_BODY,msgBody.toString());
                     context.startService(sendMailIntent);
                 }catch(Exception e){
                      Log.d(TAG, e.getMessage());

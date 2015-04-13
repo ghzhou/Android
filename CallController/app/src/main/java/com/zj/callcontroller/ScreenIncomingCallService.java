@@ -23,7 +23,10 @@ import java.util.regex.Pattern;
 
 public class ScreenIncomingCallService extends Service implements Runnable{
 
-    public static String EXTRA_PHONE_NUMBER = "extra_phone_number";
+    public static final String EXTRA_PHONE_NUMBER = "extra_phone_number";
+    public static final String EXTRA_SUBJECT = "extra_subject";
+    public static final String EXTRA_BODY = "extra_body";
+
     private static String TAG = ScreenIncomingCallService.class.getName();
     private String phoneNumber;
 
@@ -76,25 +79,22 @@ public class ScreenIncomingCallService extends Service implements Runnable{
 	 * of Shanghai 2: a spam from Shanghai
 	 */
 
-    private PhoneNumberInfo  getPhoneNumberInfo(String incomingCall){
+    private PhoneNumberInfo  getPhoneNumberInfo(String phoneNumber){
 			PhoneNumberInfo pni = new PhoneNumberInfo();
 			pni.tag = "unknown";
 			pni.from = "unknown";
             pni.operator = "unknown";
 			pni.spamValue = -1;
 			try {
-				//HttpURLConnection huc = (HttpURLConnection) new URL("http://wap.sogou.com/web/searchList.jsp?keyword=" + incomingCall).openConnection();
-				HttpURLConnection huc = (HttpURLConnection) new URL("http://www.sogou.com/web?query=" + incomingCall).openConnection();
+				HttpURLConnection huc = (HttpURLConnection) new URL("http://www.sogou.com/web?query=" + phoneNumber).openConnection();
 				HttpURLConnection.setFollowRedirects(true);
 				huc.setConnectTimeout(5 * 1000);
 				huc.setReadTimeout(1 * 1000);
 				huc.setRequestMethod("GET");
 				huc.addRequestProperty("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
 				huc.addRequestProperty("Accept-Language","zh-CN,zh;q=0.8,en-US;q=0.6,en;q=0.4");
-				//huc.addRequestProperty("Accept-Encoding","gzip,deflate");
 				huc.addRequestProperty("Cache-Control","no-cache");
-				huc.setRequestProperty("User-Agent",
-						"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/34.0.1847.131 Safari/537.36");
+				huc.setRequestProperty("User-Agent","Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/34.0.1847.131 Safari/537.36");
 				huc.connect();
 				int length = huc.getContentLength();
 				if (length==-1) {
@@ -140,10 +140,9 @@ public class ScreenIncomingCallService extends Service implements Runnable{
 			} catch (Exception e) {
 				Log.e(TAG, e.toString());
 			}
-			Log.i(TAG, "Number type: " + pni.tag + " from: " + pni.from + " spamValue: " + pni.spamValue);
+			Log.i(TAG, "Number type: " + pni.tag + " from: " + pni.from + " spamValue: " + pni.spamValue + "operator: "+pni.operator);
 			return pni;
     }
-
 
     @Override
     public void run() {
@@ -156,6 +155,7 @@ public class ScreenIncomingCallService extends Service implements Runnable{
 
         if ("Unknown".equals(displayName)){
             PhoneNumberInfo pni = getPhoneNumberInfo(phoneNumber);
+            sb.append(' ');
             sb.append(pni.from);
             sb.append(' ');
             sb.append(pni.operator);
@@ -193,11 +193,9 @@ public class ScreenIncomingCallService extends Service implements Runnable{
     private void sendEmail(String subject, String body){
         Intent sendMailIntent = new Intent();
         sendMailIntent.setComponent(new ComponentName("com.zj.emailnotification", "com.zj.emailnotification.SendEmailService"));
-//        sendMailIntent.putExtra("from","Got incoming call from: "+phoneNumber + '('+getContactName()+") at " + currentDateandTime);
-        sendMailIntent.putExtra("from",subject);
-        sendMailIntent.putExtra("message",body);
+        sendMailIntent.putExtra(EXTRA_SUBJECT, subject);
+        sendMailIntent.putExtra(EXTRA_BODY,body);
         startService(sendMailIntent);
     }
-
 
 }
