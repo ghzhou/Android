@@ -9,10 +9,10 @@ import android.os.IBinder;
 import android.provider.ContactsContract;
 import android.util.Log;
 
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.Socket;
 import java.net.URL;
@@ -96,47 +96,57 @@ public class ScreenIncomingCallService extends Service implements Runnable{
 				huc.addRequestProperty("Cache-Control","no-cache");
 				huc.setRequestProperty("User-Agent","Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/34.0.1847.131 Safari/537.36");
 				huc.connect();
-				int length = huc.getContentLength();
-				if (length==-1) {
-					length = 1000000;
-				}
-				byte[] buffer = new byte[length+1];
-				InputStream input = huc.getInputStream();
-				int bytesRead = 0;
-				while (true){
-					if (bytesRead==length){
-						break;
-					}
-					System.out.println("bytesRead:"+bytesRead+"Left:"+(length-bytesRead));
-					int ret = input.read(buffer,bytesRead,length-bytesRead);
-					if(ret==-1){
-						break;
-					}
-					bytesRead+=ret;
-				}
-				buffer[bytesRead] = '\0';
-				String s = new String(buffer, "UTF-8");
-				Pattern p = Pattern.compile("号码通用户数据:(\\S+)'");
 
-				Matcher m = p.matcher(s);
-				if (m.find()) {
-					pni.tag = m.group(1);
-                    p = Pattern.compile("id=\"phonenumberdetail\">(\\S+)\\s(\\S+)");
-                    m = p.matcher(s);
-                    if(m.find()){
-                        pni.from = m.group(1);
-                        pni.operator = m.group(2);
+                BufferedReader br = new BufferedReader(new InputStreamReader(huc.getInputStream()));
+
+//                var queryphoneinfo = '号码通用户数据：骚扰电话：0'.replace(/：/g, ':');
+//                var amount = '224';
+//                var showmin = '5';
+//                </script><script type="text/javascript" charset="utf-8" src="http://dl.web.sogoucdn.com/vr/js/491.min.91fe60ba.js"></script><script type="text/javascript">
+//                define("", ["vr"], function(vr) {
+//                    vr.add(491, "10001001", "", 0,"13250915116	浙江嘉兴 中国联通 ");
+//                }
+
+//                var queryphoneinfo = ''.replace(/：/g, ':');
+//                var amount = '';
+//                var showmin = '5';
+//                </script><script type="text/javascript" charset="utf-8" src="http://dl.web.sogoucdn.com/vr/js/491.min.91fe60ba.js"></script><script type="text/javascript">
+//                define("", ["vr"], function(vr) {
+//                    vr.add(491, "20005701", "d07119069b7ed47119069b1d9761b0e91ddb1e6169e9119b", 0,"02150385222	上海");
+//                }
+//                );
+
+
+                Pattern p1 = Pattern.compile("var queryphoneinfo = '号码通用户数据：(\\S+?)：");
+                Pattern p2 = Pattern.compile("vr\\.add\\(\\d+?, \"\\d+?\", \"\\w*?\", \\d+?,\"\\d+?\\s+?(\\S+)(\\s(\\S+)\\s)?\"");
+
+                while(true){
+                    String l = br.readLine();
+                    if (null == l ){
+                        break;
                     }
-					pni.spamValue = 0;
-					if (pni.tag.contains("中介") || pni.tag.contains("推销") || pni.tag.contains("骚扰") || pni.tag.contains("诈骗")) {
-						pni.spamValue++;
-						if (pni.from.contains("上海")) {
-							pni.spamValue++;
-						}
-					}
-				} else {
-					pni.spamValue = 0;
-				}
+                    Matcher m1 = p1.matcher(l);
+                    if (m1.find()){
+                        pni.tag = m1.group(1);
+                    }
+                    Matcher m2 = p2.matcher(l);
+                    if (m2.find()){
+                        pni.from = m2.group(1);
+                        if (m2.group(2)!=null){
+                            pni.operator = m2.group(2);
+                        }
+                        break;
+                    }
+                }
+
+                pni.spamValue = 0;
+                if (pni.tag.contains("中介") || pni.tag.contains("推销") || pni.tag.contains("骚扰") || pni.tag.contains("诈骗")) {
+                    pni.spamValue++;
+                    if (pni.from.contains("上海")) {
+                        pni.spamValue++;
+                    }
+                }
+
 			} catch (Exception e) {
 				Log.e(TAG, e.toString());
 			}

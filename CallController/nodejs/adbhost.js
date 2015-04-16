@@ -10,7 +10,7 @@ net.createServer(function(sock) {
         
         console.log('DATA ' + sock.remoteAddress + ': ' + data);
         if (data.toString()==='A'){
-            console.log("Answering...");
+            console.log(new Date() + "Answering...");
             exec("D:\\android-sdk\\platform-tools\\adb.exe shell input keyevent KEYCODE_CALL");
             setTimeout(function() {
                 console.log("then rejected");
@@ -19,7 +19,7 @@ net.createServer(function(sock) {
 
         }
         else if(data.toString()==='R'){
-            console.log("Rejecting...");
+            console.log(new Date() +" Rejecting...");
             exec("D:\\android-sdk\\platform-tools\\adb.exe shell input keyevent KEYCODE_ENDCALL");
         }
         
