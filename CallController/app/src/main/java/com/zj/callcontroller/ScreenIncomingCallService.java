@@ -12,10 +12,9 @@ import android.util.Log;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.net.HttpURLConnection;
-import java.net.Socket;
 import java.net.URL;
+import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.regex.Matcher;
@@ -30,7 +29,6 @@ public class ScreenIncomingCallService extends Service implements Runnable{
     private static String TAG = ScreenIncomingCallService.class.getName();
     private String phoneNumber;
 
-
     @Override
     public IBinder onBind(Intent intent) {
         return null;
@@ -38,34 +36,28 @@ public class ScreenIncomingCallService extends Service implements Runnable{
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        if (null==intent){
+            stopSelf(startId);
+            return Service.START_NOT_STICKY;
+        }
         phoneNumber = intent.getExtras().getString(EXTRA_PHONE_NUMBER);
         new Thread(this).start();
         return Service.START_STICKY;
     }
 
-    private OutputStream connectToAdbHost() throws IOException {
-        Socket socket = new Socket("192.168.1.6",62001);
-        return socket.getOutputStream();
-    }
-
     private void rejectPhoneCall(){
-        Log.i(TAG, "reject phone call from: "+phoneNumber);
-        try {
-            connectToAdbHost().write('R');
-        } catch (IOException e) {
-            Log.e(TAG, "Failed to write to AdbHost");
-        }
+        Log.i(TAG, "Rejecting phone call: "+phoneNumber);
+        Intent intent = new Intent(this, CallControllService.class);
+        intent.putExtra(CallControllService.EXTRA_ACTION, CallControllService.EXTRA_ACTION_REJECT);
+        startService(intent);
     }
 
     private void answerPhoneCall(){
-        Log.i(TAG, "answer phone call from: "+phoneNumber);
-        try {
-            connectToAdbHost().write('A');
-        } catch (IOException e) {
-            Log.e(TAG, "Failed to write to AdbHost");
-        }
+        Log.i(TAG, "Answering phone call: "+phoneNumber);
+        Intent intent = new Intent(this, CallControllService.class);
+        intent.putExtra(CallControllService.EXTRA_ACTION, CallControllService.EXTRA_ACTION_ANSWER);
+        startService(intent);
     }
-
 
     static class PhoneNumberInfo {
         public String tag;
@@ -187,6 +179,7 @@ public class ScreenIncomingCallService extends Service implements Runnable{
             rejectPhoneCall();// reject it immediately so that the call will be forwarded asap.
         }
         sendEmail(sb.toString(),"");
+        stopSelf();
     }
 
     private String getContactName() {
@@ -207,5 +200,4 @@ public class ScreenIncomingCallService extends Service implements Runnable{
         sendMailIntent.putExtra(EXTRA_BODY,body);
         startService(sendMailIntent);
     }
-
 }

@@ -14,6 +14,8 @@ import java.net.Socket;
 
 public class SendMessageSocketService extends Service {
 
+    private static String TAG = SendMessageSocketService.class.getName();
+
     SmsManager sms = SmsManager.getDefault();
 
     public SendMessageSocketService() {
@@ -35,7 +37,7 @@ public class SendMessageSocketService extends Service {
         try {
             sms.sendTextMessage(phoneNumber, null, message, null, null);
         }catch(Exception e){
-            Log.e("zhoujie",e.toString());
+            Log.e(TAG,e.toString());
         }
     }
 
@@ -51,7 +53,7 @@ public class SendMessageSocketService extends Service {
             while (!Thread.currentThread().isInterrupted()) {
                 try {
                     socket = serverSocket.accept();
-                    Log.i("zhoujie","a client connected!");
+                    Log.i(TAG,"a client connected!");
                     CommunicationThread commThread = new CommunicationThread(socket);
                     new Thread(commThread).start();
                 } catch (IOException e) {
@@ -77,10 +79,10 @@ public class SendMessageSocketService extends Service {
                 try {
                     String read = input.readLine();
                     if (null==read){
-                        Log.i("zhoujie","Got EOF, exit thread");
+                        Log.i(TAG,"Got EOF, exit thread");
                         break;
                     }
-                    Log.i("zhoujie", "Got request:" + read);
+                    Log.i(TAG, "Got request:" + read);
                     int i = read.indexOf(',');
                     if (i<5 || i+1 == read.length()){
                         Log.i("zhoujie","Invalid msg");

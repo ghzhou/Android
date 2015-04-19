@@ -1,18 +1,17 @@
 package com.zj.callcontroller;
 
-import android.content.Context;
-import android.os.Binder;
-import android.os.IBinder;
-import android.support.v7.app.ActionBarActivity;
+import android.content.Intent;
 import android.os.Bundle;
-import android.telephony.PhoneStateListener;
-import android.telephony.TelephonyManager;
+import android.support.v7.app.ActionBarActivity;
+import android.test.AndroidTestRunner;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
-import java.lang.reflect.Method;
+import com.cgutman.adblib.AdbStream;
 
+import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 
 public class MainActivity extends ActionBarActivity {
 
@@ -23,6 +22,11 @@ public class MainActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Log.d(TAG,"main activity started");
+        //try connect to Adb Host, so that the debug device notification pops up
+        Intent intent = new Intent(this, CallControllService.class);
+        intent.putExtra(CallControllService.EXTRA_ACTION, CallControllService.EXTRA_ACTION_TEST);
+        startService(intent);
+
     }
 
     @Override
