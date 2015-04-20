@@ -48,4 +48,15 @@
         android:layout_alignParentEnd="true"
         android:hint="@string/message" />
 
+    <Switch
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/gsm"
+        android:id="@+id/gsm"
+        android:checked="false"
+        android:layout_alignEnd="@+id/message"
+        android:layout_marginEnd="63dp"
+        android:layout_alignBottom="@+id/send_button"
+        android:layout_alignTop="@+id/send_button" />
+
 </RelativeLayout>

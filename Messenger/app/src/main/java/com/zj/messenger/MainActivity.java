@@ -7,6 +7,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Switch;
 
 
 public class MainActivity extends Activity {
@@ -19,6 +20,8 @@ public class MainActivity extends Activity {
         final EditText ipText = (EditText) findViewById(R.id.ip);
         final EditText toText = (EditText) findViewById(R.id.to);
         final EditText messageText = (EditText) findViewById(R.id.message);
+        final Switch gsm = (Switch)findViewById(R.id.gsm);
+
         Button clickButton = (Button) findViewById(R.id.send_button);
         clickButton.setOnClickListener( new View.OnClickListener() {
             @Override
@@ -26,7 +29,8 @@ public class MainActivity extends Activity {
                 String ip = ipText.getText().toString();
                 String to = toText.getText().toString();
                 String message = messageText.getText().toString();
-                SendMessageService.startActionSendMessage(MainActivity.this,ip,to,message);
+
+                SendMessageService.startActionSendMessage(MainActivity.this,ip,to,message,gsm.isChecked());
                 messageText.getText().clear();
             }
         });

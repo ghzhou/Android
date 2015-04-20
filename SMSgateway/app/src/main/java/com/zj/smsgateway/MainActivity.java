@@ -13,11 +13,12 @@ import com.example.jiezhou.smsgateway.R;
 public class MainActivity extends ActionBarActivity {
 
     private String TAG = MainActivity.class.getSimpleName();
-    private boolean serverStarted = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Intent myIntent = new Intent(this, SendMessageSocketService.class);
+        this.startService(myIntent);
     }
 
 }

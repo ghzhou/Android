@@ -6,6 +6,7 @@ import android.content.Context;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
 
@@ -22,6 +23,7 @@ public class SendMessageService extends IntentService {
     private static final String IP = "com.zj.messenger.extra.IP";
     private static final String TO = "com.zj.messenger.extra.TO";
     private static final String MESSAGE = "com.zj.messenger.extra.MESSAGE";
+    private static final String GSM = "com.zj.messenger.extra.GSM";
 
     /**
      * Starts this service to perform action Foo with the given parameters. If
@@ -29,12 +31,13 @@ public class SendMessageService extends IntentService {
      *
      * @see IntentService
      */
-    public static void startActionSendMessage(Context context, String ip, String to, String message) {
+    public static void startActionSendMessage(Context context, String ip, String to, String message, boolean gsm) {
         Intent intent = new Intent(context, SendMessageService.class);
         intent.setAction(ACTION_SEND_MESSAGE);
         intent.putExtra(IP, ip);
         intent.putExtra(TO, to);
         intent.putExtra(MESSAGE, message);
+        intent.putExtra(GSM,gsm);
         context.startService(intent);
     }
 
@@ -50,7 +53,8 @@ public class SendMessageService extends IntentService {
                 final String ip = intent.getStringExtra(IP);
                 final String to = intent.getStringExtra(TO);
                 final String message = intent.getStringExtra(MESSAGE);
-                handleActionSendMessage(ip,to, message);
+                final boolean gsm = intent.getBooleanExtra(GSM,true);
+                handleActionSendMessage(ip,to, message, gsm);
             }
         }
     }
@@ -59,12 +63,17 @@ public class SendMessageService extends IntentService {
      * Handle action Foo in the provided background thread with the provided
      * parameters.
      */
-    private void handleActionSendMessage(String ip, String to, String message) {
+    private void handleActionSendMessage(String ip, String to, String message, boolean gsm) {
         try {
             Socket s=new Socket(ip,62000);
-            BufferedWriter br = new BufferedWriter(new OutputStreamWriter(s.getOutputStream()));
-            br.write(to+','+message);
-            br.close();
+            OutputStream os = s.getOutputStream();
+            os.write(to.getBytes());
+            os.write(',');
+            os.write(message.getBytes());
+            os.write(',');
+            char c = gsm?'1':'2';
+            os.write(c);
+            os.close();
             s.close();
         } catch (IOException e) {
             e.printStackTrace();
