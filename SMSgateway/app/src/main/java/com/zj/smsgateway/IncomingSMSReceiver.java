@@ -8,6 +8,9 @@ import android.os.Bundle;
 import android.telephony.SmsMessage;
 import android.util.Log;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 public class IncomingSMSReceiver extends BroadcastReceiver {
 
     private static final String EXTRA_SUBJECT = "extra_subject";
@@ -22,19 +25,20 @@ public class IncomingSMSReceiver extends BroadcastReceiver {
                 try{
                     Object[] pdus = (Object[]) bundle.get("pdus");
                     SmsMessage[] msgs = new SmsMessage[pdus.length];
-                    StringBuilder msgFrom = new StringBuilder();
+                    StringBuilder subject = new StringBuilder("SMS");
                     StringBuilder msgBody = new StringBuilder();
                     for(int i=0; i<msgs.length; i++){
                         msgs[i] = SmsMessage.createFromPdu((byte[])pdus[i]);
-                        msgFrom.append(msgs[i].getOriginatingAddress());
+                        subject.append(msgs[i].getOriginatingAddress());
                         msgBody.append(msgs[i].getMessageBody());
                     }
-                    Log.i(TAG,msgFrom.toString());
+                    subject.append((new SimpleDateFormat("yyyyMMdd_HHmmss")).format(new Date()));
+                    Log.i(TAG, subject.toString());
                     Log.i(TAG,msgBody.toString());
 
                     Intent sendMailIntent = new Intent();
                     sendMailIntent.setComponent(new ComponentName("com.zj.emailnotification", "com.zj.emailnotification.SendEmailService"));
-                    sendMailIntent.putExtra(EXTRA_SUBJECT, msgFrom.toString());
+                    sendMailIntent.putExtra(EXTRA_SUBJECT, subject.toString());
                     sendMailIntent.putExtra(EXTRA_BODY,msgBody.toString());
                     context.startService(sendMailIntent);
                 }catch(Exception e){

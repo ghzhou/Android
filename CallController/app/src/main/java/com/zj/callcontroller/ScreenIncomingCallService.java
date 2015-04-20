@@ -149,10 +149,7 @@ public class ScreenIncomingCallService extends Service implements Runnable{
     @Override
     public void run() {
         String displayName = getContactName();
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd_HHmmss");
-        String currentDateTime = sdf.format(new Date());
-        StringBuilder sb = new StringBuilder(currentDateTime);
-        sb.append(" incoming call: ");
+        StringBuilder sb = new StringBuilder("Call");
         sb.append(phoneNumber);
 
         if ("Unknown".equals(displayName)){
@@ -178,7 +175,7 @@ public class ScreenIncomingCallService extends Service implements Runnable{
             sb.append(" forwarded");
             rejectPhoneCall();// reject it immediately so that the call will be forwarded asap.
         }
-        sendEmail(sb.toString(),"");
+        sendEmail(sb.toString(),(new SimpleDateFormat("yyyyMMdd_HHmmss")).format(new Date()));
         stopSelf();
     }
 
