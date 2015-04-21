@@ -1,4 +1,10 @@
 <resources>
-    <string name="app_name">SMSgateway</string>
-    <string name="title_activity_main">SMS Gateway Welcome</string>
+    <string name="app_name">SMS Gateway</string>
+    <string name="title_activity_main">SMS Gateway</string>
+    <string name="introduction">
+        Turn on your old phone and leave it at home, while you are still able to send and receive message.
+        \n
+        \nPrerequisites:
+        \nThis app requires the EmailNotification service(another app)
+    </string>
 </resources>

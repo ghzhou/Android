@@ -29,12 +29,13 @@ public class IncomingSMSReceiver extends BroadcastReceiver {
                     StringBuilder msgBody = new StringBuilder();
                     for(int i=0; i<msgs.length; i++){
                         msgs[i] = SmsMessage.createFromPdu((byte[])pdus[i]);
-                        subject.append(msgs[i].getOriginatingAddress());
                         msgBody.append(msgs[i].getMessageBody());
                     }
+                    subject.append(msgs[0].getOriginatingAddress());
+                    subject.append('(');
+                    subject.append(msgs.length);
+                    subject.append(')');
                     subject.append((new SimpleDateFormat("yyyyMMdd_HHmmss")).format(new Date()));
-                    Log.i(TAG, subject.toString());
-                    Log.i(TAG,msgBody.toString());
 
                     Intent sendMailIntent = new Intent();
                     sendMailIntent.setComponent(new ComponentName("com.zj.emailnotification", "com.zj.emailnotification.SendEmailService"));

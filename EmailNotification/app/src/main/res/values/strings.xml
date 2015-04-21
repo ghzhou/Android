@@ -3,4 +3,5 @@
     <string name="title_activity_main">Email notification settings</string>
     <string name="save_button_label">Save</string>
     <string name="email_recipient">Email Recipient</string>
+    <string name="introduction">This is a service app consumed by other apps to deliver notification to the recipient email above. For example, CallController app send notification when it recieves a phone call, SMSGateway app transfer text message into the email box.</string>
 </resources>

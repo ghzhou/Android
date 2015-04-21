@@ -3,15 +3,9 @@ package com.zj.callcontroller;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
-import android.test.AndroidTestRunner;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-
-import com.cgutman.adblib.AdbStream;
-
-import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
 
 public class MainActivity extends ActionBarActivity {
 

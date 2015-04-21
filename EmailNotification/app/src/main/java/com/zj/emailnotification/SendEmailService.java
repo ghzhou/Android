@@ -59,6 +59,8 @@ public class SendEmailService extends Service {
             stopSelf(startId);
             return START_NOT_STICKY;
         }
+        Log.i(TAG,"subject:"+subject);
+        Log.i(TAG,"body:"+body);
         new Thread(new SendEmailThread(subject, body)).start();
         return START_NOT_STICKY;
     }

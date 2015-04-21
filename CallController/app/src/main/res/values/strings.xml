@@ -2,4 +2,20 @@
     <string name="app_name">CallController</string>
     <string name="title_activity_main">CallController</string>
     <string name="action_settings">Settings</string>
+    <string name="introduction">
+        Leave your old phone at home, divert phone call to your day-to-day phone number when busy.
+        \n
+        \nWhenever there is an incoming call, it will:
+        \n1) reject (so that forward to your day-to-day phone number) if the calling number is in the address book (a.k.a. white list)
+        \n2) auto answer the phone call if it is a local spam (not costing a cent)
+        \n3) let it be if it is a non-local spam.
+        \n4) reject (so that forward) if it is an unknown number.
+        \n
+        \n Every phone call is archived to your email inbox
+        \n
+        \n Prerequisites:
+        \n 1) you need to turn on debug
+        \n 2) you need to run \"adb tcpip 5555\" to enable debug over network.
+        \n 3) You need to install the EmailNofitication app and configure the SMTP relay and the email to receive notifications.
+    </string>
 </resources>
