@@ -21,6 +21,9 @@ public class PhoneStateReceiver extends BroadcastReceiver {
             case TelephonyManager.CALL_STATE_RINGING:  // incoming call
                 incomingFlag = true;
                 incomingNumber = intent.getStringExtra("incoming_number");
+                if (incomingNumber == null) {
+                    break;
+                }
                 Log.d(TAG, "RINGING :" + incomingNumber);
 
                 Intent screenIncomingCallIntent = new Intent(context, ScreenIncomingCallService.class);
