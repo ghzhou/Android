@@ -93,6 +93,12 @@ public class Mail extends javax.mail.Authenticator {
         Log.i(TAG, "stmpServer=" + smtpServer + ";portNumber=" + portNumber + ";emailAddress=" + emailAddress);
         props.put("mail.smtp.host", smtpServer);
         props.put("mail.smtp.port", portNumber);
+        String proxyHost = System.getProperty("http.proxyHost");
+        if (null != proxyHost && proxyHost.length() > 0) {
+            String proxyPort = System.getProperty("http.proxyPort");
+            props.put("mail.smtp.proxy.host", proxyHost);
+            props.put("mail.smtp.proxy.port", proxyPort);
+        }
         this.emailAddress = emailAddress;
         this.password = password;
         this.emailRecepient = emailRecepient;
