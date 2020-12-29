@@ -2,21 +2,27 @@ package com.zj.callcontroller;
 
 import android.app.Service;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.IBinder;
 import android.provider.ContactsContract;
+import android.support.annotation.NonNull;
+import android.telephony.TelephonyManager;
 import android.util.Log;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class ScreenIncomingCallService extends Service implements Runnable{
 
@@ -58,9 +64,17 @@ public class ScreenIncomingCallService extends Service implements Runnable{
     }
 
     static class PhoneNumberInfo {
-        public String tag;
+
+        PhoneNumberInfo() {
+            category = "unknown";
+            from = "unknown";
+            carrier = "unknown";
+            spamValue = -1;
+        }
+
+        public String category;
         public String from;
-        public String operator;
+        public String carrier;
         public int spamValue;
     }
 
@@ -69,79 +83,39 @@ public class ScreenIncomingCallService extends Service implements Runnable{
 	 * of Shanghai 2: a spam from Shanghai
 	 */
 
-    private PhoneNumberInfo  getPhoneNumberInfo(String phoneNumber){
-			PhoneNumberInfo pni = new PhoneNumberInfo();
-			pni.tag = "unknown";
-			pni.from = "unknown";
-            pni.operator = "unknown";
-			pni.spamValue = -1;
-			try {
-				HttpURLConnection huc = (HttpURLConnection) new URL("http://www.sogou.com/web?query=" + phoneNumber).openConnection();
-				HttpURLConnection.setFollowRedirects(true);
-				huc.setConnectTimeout(5 * 1000);
-				huc.setReadTimeout(1 * 1000);
-				huc.setRequestMethod("GET");
-				huc.addRequestProperty("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
-				huc.addRequestProperty("Accept-Language","zh-CN,zh;q=0.8,en-US;q=0.6,en;q=0.4");
-				huc.addRequestProperty("Cache-Control","no-cache");
-				huc.setRequestProperty("User-Agent","Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/34.0.1847.131 Safari/537.36");
-				huc.connect();
+    @NonNull
+    private PhoneNumberInfo getPhoneNumberInfo(String phoneNumber) {
+        PhoneNumberInfo pni = new PhoneNumberInfo();
+        try {
+            pni = callPhoneNumberService(phoneNumber);
+        } catch (IOException|JSONException e) {
+            Log.e(TAG, e.getMessage());
+        }
+        Log.i(TAG, "Number type: " + pni.category + " from: " + pni.from + " spamValue: " + pni.spamValue + "operator: "+pni.carrier);
+        return pni;
+    }
 
-                BufferedReader br = new BufferedReader(new InputStreamReader(huc.getInputStream()));
-
-//                var queryphoneinfo = '号码通用户数据：骚扰电话：0'.replace(/：/g, ':');
-//                var amount = '224';
-//                var showmin = '5';
-//                </script><script type="text/javascript" charset="utf-8" src="http://dl.web.sogoucdn.com/vr/js/491.min.91fe60ba.js"></script><script type="text/javascript">
-//                define("", ["vr"], function(vr) {
-//                    vr.add(491, "10001001", "", 0,"13250915116	浙江嘉兴 中国联通 ");
-//                }
-
-//                var queryphoneinfo = ''.replace(/：/g, ':');
-//                var amount = '';
-//                var showmin = '5';
-//                </script><script type="text/javascript" charset="utf-8" src="http://dl.web.sogoucdn.com/vr/js/491.min.91fe60ba.js"></script><script type="text/javascript">
-//                define("", ["vr"], function(vr) {
-//                    vr.add(491, "20005701", "d07119069b7ed47119069b1d9761b0e91ddb1e6169e9119b", 0,"02150385222	上海");
-//                }
-//                );
-
-
-                Pattern p1 = Pattern.compile("var queryphoneinfo = '号码通用户数据：(\\S+?)：");
-                Pattern p2 = Pattern.compile("vr\\.add\\(\\d+?, \"\\d+?\", \"\\w*?\", \\d+?,\"\\d+?\\s+?(\\S+)(\\s(\\S+)\\s)?\"");
-
-                while(true){
-                    String l = br.readLine();
-                    if (null == l ){
-                        break;
-                    }
-                    Matcher m1 = p1.matcher(l);
-                    if (m1.find()){
-                        pni.tag = m1.group(1);
-                    }
-                    Matcher m2 = p2.matcher(l);
-                    if (m2.find()){
-                        pni.from = m2.group(1);
-                        if (m2.group(2)!=null){
-                            pni.operator = m2.group(2);
-                        }
-                        break;
-                    }
-                }
-
-                pni.spamValue = 0;
-                if (pni.tag.contains("中介") || pni.tag.contains("推销") || pni.tag.contains("骚扰") || pni.tag.contains("诈骗")) {
-                    pni.spamValue++;
-                    if (pni.from.contains("上海")) {
-                        pni.spamValue++;
-                    }
-                }
-
-			} catch (Exception e) {
-				Log.e(TAG, e.toString());
-			}
-			Log.i(TAG, "Number type: " + pni.tag + " from: " + pni.from + " spamValue: " + pni.spamValue + "operator: "+pni.operator);
-			return pni;
+    @NonNull
+    private PhoneNumberInfo callPhoneNumberService(String phoneNumber) throws IOException, JSONException {
+        HttpURLConnection huc = (HttpURLConnection) new URL(String.format(getString(R.string.phone_screen_rest_url)
+                , phoneNumber)).openConnection();
+        huc.connect();
+        BufferedReader br = new BufferedReader(new InputStreamReader(huc.getInputStream()));
+        StringBuilder sb = new StringBuilder();
+        while (true) {
+            String l = br.readLine();
+            if (null == l) {
+                break;
+            }
+            sb.append(l);
+        }
+        JSONObject jsonObj =  new JSONObject(sb.toString());
+        PhoneNumberInfo pni = new PhoneNumberInfo();
+        pni.category = jsonObj.getString("category");
+        pni.from = jsonObj.getString("from");
+        pni.carrier = jsonObj.getString("carrier");
+        pni.spamValue = jsonObj.getInt("spamValue");
+        return pni;
     }
 
     @Override
@@ -155,26 +129,59 @@ public class ScreenIncomingCallService extends Service implements Runnable{
             sb.append(' ');
             sb.append(pni.from);
             sb.append(' ');
-            sb.append(pni.operator);
+            sb.append(pni.carrier);
             sb.append(' ');
-            sb.append(pni.tag);
+            sb.append(pni.category);
             if (2 == pni.spamValue) { // spam from SH, answer it
-                sb.append(" auto answered");
-                answerPhoneCall();
+                if (android.os.Build.VERSION.SDK_INT > 23) {
+                    sb.append(" auto answered");
+                    answerPhoneCall();
+                } else {
+                    sb.append(" let it be");
+                }
             } else if (1 == pni.spamValue) { // spam from out of SH, let it ring
                 sb.append(" let it be");
             } else {
                 sb.append(" forwarded");
-                rejectPhoneCall();
+                if (android.os.Build.VERSION.SDK_INT <= 23) {
+                    rejectWithTelephony();
+                } else {
+                    rejectPhoneCall();
+                }
             }
         }
         else{// known contact in address book
             sb.append(displayName);
             sb.append(" forwarded");
-            rejectPhoneCall();// reject it immediately so that the call will be forwarded asap.
+            if (android.os.Build.VERSION.SDK_INT <= 23) {
+                rejectWithTelephony();
+            } else {
+                rejectPhoneCall();
+            }
         }
         sendEmail(sb.toString(),(new SimpleDateFormat("yyyyMMdd_HHmmss")).format(new Date()));
         stopSelf();
+    }
+
+    private void rejectWithTelephony() {
+        TelephonyManager tm = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
+        try {
+            Class c = Class.forName(tm.getClass().getName());
+            Method m = c.getDeclaredMethod("getITelephony");
+            m.setAccessible(true);
+            Object telephonyInterface = m.invoke(tm);
+            Class telephonyInterfaceClass = Class.forName(telephonyInterface.getClass().getName());
+            Method methodEndCall = telephonyInterfaceClass.getDeclaredMethod("endCall");
+            methodEndCall.invoke(telephonyInterface);
+        } catch (ClassNotFoundException e) {
+            Log.e(TAG, e.getMessage());
+        } catch(NoSuchMethodException  e) {
+            Log.e(TAG, e.getMessage());
+        } catch (IllegalAccessException e) {
+            Log.e(TAG, e.getMessage());
+        } catch (InvocationTargetException e) {
+            Log.e(TAG, e.getMessage());
+        }
     }
 
     private String getContactName() {

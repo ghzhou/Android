@@ -18,4 +18,5 @@
         \n 2) you need to run \"adb tcpip 5555\" to enable debug over network.
         \n 3) You need to install the EmailNofitication app and configure the SMTP relay and the email to receive notifications.
     </string>
+    <string name="phone_screen_rest_url">http://192.168.1.34:3000?number=%s</string>
 </resources>
